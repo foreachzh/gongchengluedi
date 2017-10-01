@@ -871,7 +871,7 @@ namespace TestApp
             public byte[] Post_retbyte(string url, string refer, string postingdata)
             {
                 byte[] bytes = this.encoder.GetBytes(postingdata);
-                string str = null;
+                // string str = null;
                 byte[] ResponseByte = null;
                 HttpWebResponse response = null;
                 //StreamReader reader = null;

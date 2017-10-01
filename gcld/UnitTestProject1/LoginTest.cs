@@ -80,7 +80,7 @@ namespace UnitTestProject1
             Login target = new Login(); // TODO: 初始化为适当的值
             target.Uname = "foreach";
             target.Passwd = "8891129zh";
-            ExcuteState expected = null; // TODO: 初始化为适当的值
+            // ExcuteState expected = null; // TODO: 初始化为适当的值
             ExcuteState actual;
             actual = target.LoginGame();
             if (actual.State == IdentityCode.Fail)
@@ -113,14 +113,14 @@ namespace UnitTestProject1
             Command cmd = new Command("login_user", lst);
             byte[] sendarr = cmd.outputarr;
 
-            AsynchronousClient client = new AsynchronousClient(role.ServerAddr, role.ServerPort);
+            RoleInfoStoreClient client = new RoleInfoStoreClient(role.ServerAddr, role.ServerPort);
             client.Send(sendarr);
             client.SendDone.WaitOne();
 
             client.Receive();
             client.ReceiveDone.WaitOne();
 
-            KeyValuePair<string, string> pair = client.RecvLst.Find(obj => obj.Key == "login_user");
+            // 
 
             int i = 0;
             while (i++<5)
@@ -149,14 +149,8 @@ namespace UnitTestProject1
             {
                 Thread.Sleep(1000);
             }
-            KeyValuePair<string, string> pair1 = client.RecvLst.Find(obj => obj.Key == "building@getMainCityInfo");
-            if (!default(KeyValuePair<string, string>).Equals(pair1))
-            {
-                string maininfo = Regex.Match(pair1.Value, "data\":(?<value>.*?)}}").Groups["value"].Value;
-                webMainCityData data = (webMainCityData)JsonManager.JsonToObject(maininfo, typeof(webMainCityData));
-                Area[] areaArr = (Area[])data.areas;
-                role.AreaList = areaArr;
-            }
+            // 获取主城信息
+            client.SetJson2AreaLst();
 
             i = 0;
             // 获取当前任务，执行
@@ -179,12 +173,10 @@ namespace UnitTestProject1
                     updatetask = null;
                 }
             }
-            foreach (var item in client.RecvLst)
-            {
-                ConsoleLog.Instance.writeInformationLog(item.Key+"="+item.Value);
-            }
 
-            Assert.AreEqual(expected, actual);
+            client.PrintBuildingInfo();
+
+            // Assert.AreEqual(expected, actual);
             Assert.Inconclusive("验证此测试方法的正确性。");
         }
 

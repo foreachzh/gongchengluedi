@@ -6,6 +6,7 @@ using System.Text;
 using System.Net;
 using System.Net.Sockets;
 using XRFAppPlat.Logger;
+using System.Text.RegularExpressions;
 
 namespace TestApp.fire
 {
@@ -66,13 +67,13 @@ namespace TestApp.fire
         private string m_IPAddr = string.Empty;
         private int m_nPort = 0;
         private Socket m_client = null;
-        private List<KeyValuePair<string, string>> m_lst = new List<KeyValuePair<string, string>>();
+        protected List<KeyValuePair<string, string>> m_rcvpackagelst = new List<KeyValuePair<string, string>>();
 
-        public List<KeyValuePair<string, string>> RecvLst
-        {
-            get { return m_lst; }
-            set { m_lst = value; }
-        }
+        //public List<KeyValuePair<string, string>> RecvLst
+        //{
+        //    get { return m_rcvpackagelst; }
+        //    set { m_rcvpackagelst = value; }
+        //}
         public AsynchronousClient(string ServerIP, int nport)
         {
             m_IPAddr = ServerIP;
@@ -274,7 +275,8 @@ namespace TestApp.fire
                 Array.Copy(recvarr, 4, arrcipercode, 0, 32);
                 string cipercodestr = System.Text.Encoding.UTF8.GetString(arrcipercode).Replace("\0", "");
 
-                m_lst.Add(new KeyValuePair<string, string>(cipercodestr, outputstr));
+                m_rcvpackagelst.Add(new KeyValuePair<string, string>(cipercodestr, outputstr));
+                // 
             }
         }
 
@@ -328,6 +330,14 @@ namespace TestApp.fire
             }
         }
 
+
+        public void SendCmd(string cmd1, string param1, string param2)
+        {//
+            Dictionary<string, string> paralist = new Dictionary<string, string>();
+            paralist.Add(param1, param2);
+            Command cmd = new Command(cmd1, paralist);
+            Send(cmd.outputarr);
+        }
         //public static int Main(String[] args)
         //{
         //    StartClient();

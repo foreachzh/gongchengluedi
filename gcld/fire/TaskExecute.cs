@@ -10,8 +10,8 @@ namespace TestApp.fire
 {
     public class TaskExecute
     {
-        private AsynchronousClient m_client = null;
-        public TaskExecute(AsynchronousClient client)
+        private RoleInfoStoreClient m_client = null;
+        public TaskExecute(RoleInfoStoreClient client)
         {
             m_client = client;
         }
@@ -33,15 +33,13 @@ namespace TestApp.fire
             {
                 if (task.taskName == "经济发展")
                 {
-                    KeyValuePair<string, string> pair = m_client.RecvLst.Find(obj => obj.Key == "building@getBuildingInfo");
-                    if (!default(KeyValuePair<string, string>).Equals(pair))
+                    
+                    string buildingstr = m_client.GetBuildingInfo();
+                    if(!string.IsNullOrEmpty(buildingstr))
                     {
-                        m_client.RecvLst.Remove(pair);
-
-                        string value = pair.Value;
-                        string str = Regex.Match(value, "data\":(?<value>.*?)}}}").Groups["value"].Value + "}";
+                        m_client.RemoveKey("building@getBuildingInfo");
                         webBuildingData buildingData =
-                            (webBuildingData)JsonManager.JsonToObject(str, typeof(webBuildingData));
+                            (webBuildingData)JsonManager.JsonToObject(buildingstr, typeof(webBuildingData));
 
                         if (buildingData.totalOutput[0].output < 500)
                         {
@@ -83,45 +81,74 @@ namespace TestApp.fire
                 }
                 else if (task.taskName == "消灭土匪")
                 {// 怎样知道任务是否完成
-                    KeyValuePair<string, string> pair1 = m_client.RecvLst.Find(obj => obj.Key == "push@task");
-                    if (default(KeyValuePair<string, string>).Equals(pair1))
-                    {
-                        // 完成任务
-                        CommandList.FinishTask(m_client, task.group, task.type, task.index);
-                        Thread.Sleep(1000 * 3);
-                        return true;
-                    }
-                    else
-                    {// 更新当前任务
-                        ConsoleLog.Instance.writeInformationLog(pair1.Value);
-                    }
+                    //KeyValuePair<string, string> pair1 = m_client.RecvLst.Find(obj => obj.Key == "push@task");
+                    //if (default(KeyValuePair<string, string>).Equals(pair1))
+                    //{
+                    //    // 完成任务
+                    //    CommandList.FinishTask(m_client, task.group, task.type, task.index);
+                    //    Thread.Sleep(1000 * 3);
+                    //    return true;
+                    //}
+                    //else
+                    //{// 更新当前任务
+                    //    ConsoleLog.Instance.writeInformationLog(pair1.Value);
+                    //}
                     // 会pushTask，报文如下:
                     // ....push@task...........................x.mQ;K.@..+2.
                 }
                 else if(task.taskName.Contains("伐木造林1"))
                 {
-                    if (role.AreaList != null)
+                    int nWoodOutput = m_client.GetCurrentOutputByType(2);
+                    if (nWoodOutput == -1)
                     {
-                        Area area = role.AreaList[1];
-                        if (area.totalOutput[0].output < 60)
+                        // 查看type是否=2
+                        int id = m_client.GetIdbyType(2);
+                        CommandList.SendGetBuildingInfo(m_client, id);
+                        Thread.Sleep(1000 * 3);
+                        return false;
+                    }
+                    else if (nWoodOutput < 70)
+                    {
+                        // 查看是否有木材产出信息
+                        // 查看 树林信息，没有则发送
+                        string buildinfo = m_client.GetBuildingInfo();
+                        if (string.IsNullOrEmpty(buildinfo))
                         {
-                            // 查看 树林信息，没有则发送
-                            KeyValuePair<string, string> pair1 = m_client.RecvLst.Find(obj => obj.Key == "building@getBuildingInfo");
-                            if (default(KeyValuePair<string, string>).Equals(pair1))
+                            int id = m_client.GetIdbyType(2);
+                            CommandList.SendGetBuildingInfo(m_client, id);
+                            Thread.Sleep(1000 * 3);
+                            m_client.Farm = m_client.GetBuildingInfo2();
+                            return false;
+                        }
+                        else
+                        {
+                            int nSleep=0;
+                            //树林信息
+                            ConsoleLog.Instance.writeInformationLog("林场信息=" + buildinfo);
+                            webBuildingData wdInfo = (webBuildingData)JsonManager.JsonToObject(buildinfo, typeof(webBuildingData));
+                            foreach (Building build in wdInfo.buildings)
                             {
-                                // 查看type是否=2
-                                CommandList.SendGetBuildingInfo(m_client, area.id);
-                                Thread.Sleep(1000 * 3);
-                                return false;
+                                if (build.type == 0)
+                                {
+                                    m_client.SendCmd(CommandList.MC_UPGRADE_BUILDING, "buildingId", build.id.ToString());
+                                    nSleep = build.upgrade.time;
+                                }
                             }
-                            else
-                            {
-                                //树林信息
-                                ConsoleLog.Instance.writeInformationLog("树林信息="+pair1.Value);
-                            }
+
+                            Thread.Sleep(nSleep);
+                            
+                            int id = m_client.GetIdbyType(2);
+                            CommandList.SendGetBuildingInfo(m_client, id);
+                            Thread.Sleep(1000 * 3);
+                            m_client.Farm = m_client.GetBuildingInfo2();
+                            return false;
                         }
                     }
-                    return true;
+                    else
+                    {// 完成任务 
+                        CommandList.FinishTask(m_client, task.group, task.type, task.index);
+                        return true;
+                    }
                 }
             }
             catch (Exception ex)

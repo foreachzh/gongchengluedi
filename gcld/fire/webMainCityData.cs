@@ -29,6 +29,9 @@ namespace TestApp.fire
 
     public class OfficerOutput
     {
+        /// <summary>
+        /// =1:银两;=2:木材;=3:粮食;=4:铁矿;=5:兵营出兵速度
+        /// </summary>
         [DataMember]
         public int type { get; set; }
         [DataMember]

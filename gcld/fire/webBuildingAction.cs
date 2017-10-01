@@ -123,6 +123,8 @@ namespace TestApp.fire
         public int freeConsNum { get; set; }
         [DataMember]
         public int kidnapper { get; set; }
+        [DataMember]
+        public int hasBandit { get; set; }
     }
     //[DataContract]
     //public class Action

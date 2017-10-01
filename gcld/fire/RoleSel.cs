@@ -39,8 +39,6 @@ namespace TestApp.fire
             set { m_curTask = value; }
         }
 
-        public Area[] AreaList { get; set; }
-
         private string m_tasktxtPath;
         public string TasktxtPath
         {
