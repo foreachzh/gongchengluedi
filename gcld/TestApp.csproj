@@ -59,10 +59,10 @@
     <Reference Include="System.Xml" />
     <Reference Include="XRFAppPlat.Logger, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\XRFAppPlat.Logger\bin\Debug\XRFAppPlat.Logger.dll</HintPath>
+      <HintPath>..\Dll\XRFAppPlat.Logger.dll</HintPath>
     </Reference>
     <Reference Include="zlib.net">
-      <HintPath>bin\zlib.net.dll</HintPath>
+      <HintPath>..\Dll\zlib.net.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

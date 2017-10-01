@@ -39,10 +39,6 @@
     <Reference Include="AxInterop.ShockwaveFlashObjects">
       <HintPath>..\obj\Debug\AxInterop.ShockwaveFlashObjects.dll</HintPath>
     </Reference>
-    <Reference Include="log4net, Version=2.0.8.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\bin\Debug\log4net.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -59,10 +55,10 @@
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="XRFAppPlat.Logger">
-      <HintPath>..\..\XRFAppPlat.Logger\bin\Debug\XRFAppPlat.Logger.dll</HintPath>
+      <HintPath>..\..\Dll\XRFAppPlat.Logger.dll</HintPath>
     </Reference>
     <Reference Include="zlib.net">
-      <HintPath>..\bin\zlib.net.dll</HintPath>
+      <HintPath>..\..\Dll\zlib.net.dll</HintPath>
     </Reference>
   </ItemGroup>
   <Choose>
