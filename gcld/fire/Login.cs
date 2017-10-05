@@ -62,6 +62,14 @@ namespace TestApp.fire
             set { m_pkey = value; }
         }
 
+        private string m_strServerName;
+
+        public string StrServerName
+        {
+            get { return m_strServerName; }
+            set { m_strServerName = value; }
+        }
+
 
         public Login()
         {
@@ -78,6 +86,13 @@ namespace TestApp.fire
         {
             m_pkey = m_client.getOneCookieValue2("ticket");
             return true;
+        }
+
+        public static long ConvertDateTimeToInt()
+        {
+            System.DateTime startTime = TimeZone.CurrentTimeZone.ToLocalTime(new System.DateTime(1970, 1, 1, 0, 0, 0, 0));
+            long t = (DateTime.Now.Ticks - startTime.Ticks) / 10000;   //除10000调整为13位      
+            return t;
         }
 
         public ExcuteState LoginGame()
@@ -115,9 +130,10 @@ namespace TestApp.fire
 
                 object token = engine.EvalValue("getToken", lst, engine.Functionbody);
                 string stoken = (string)token;
+                long timeticks = ConvertDateTimeToInt();
                 URL = GlobalVal.CenterURL + 
-                    string.Format("/ssoLogin.action?jsoncallback=jsonp1503016396631&funName=indexLogin&username={0}&token={1}&remember=true",
-                    m_uname, stoken);
+                    string.Format("/ssoLogin.action?jsoncallback=jsonp{2}&funName=indexLogin&username={0}&token={1}&remember=true",
+                    m_uname, stoken, timeticks);
                 retstr = m_client.DownloadString(URL, string.Empty);
 
                 jsontext = Regex.Match(retstr, "\\((?<value>.*?)\\)").Groups["value"].Value;
@@ -144,6 +160,7 @@ namespace TestApp.fire
                 jsontext = Regex.Match(retstr, "\\[(?<value>.*?)\\]").Groups["value"].Value;
                 List<webGameInfo> ginfo = (List<webGameInfo>)JsonManager.JsonToObject("["+jsontext+"]", typeof(List<webGameInfo>));
                 m_psInfo.phistory = ginfo[0];
+                m_strServerName = ginfo[0].serverName;
 
                 // 快速登录
                 URL = GlobalVal.LgnURL + "/quick.xhtml?gid=gcld";

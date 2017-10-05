@@ -16,6 +16,15 @@ namespace TestApp.fire
 
         }
 
+        public void PrintInfo()
+        {
+            for (int i = 0; i < m_rcvpackagelst.Count(); i++)
+            {
+                KeyValuePair<string, string> pair = m_rcvpackagelst[i];
+                ConsoleLog.Instance.writeSuccessLog(pair.Key+"="+pair.Value);
+            }
+        }
+
         public void PrintBuildingInfo()
         { //push@building
             KeyValuePair<string, string> pair = m_rcvpackagelst.Find(x => { return x.Key == "push@building"; });
@@ -146,7 +155,12 @@ namespace TestApp.fire
         {
             KeyValuePair<string, string> pair = m_rcvpackagelst.Find(obj => obj.Key == key);
             if (!default(KeyValuePair<string, string>).Equals(pair))
-                m_rcvpackagelst.Remove(pair);
+            {
+                lock (m_lock)
+                {
+                    m_rcvpackagelst.Remove(pair);
+                }
+            }
 
             return true;
         }
@@ -157,6 +171,70 @@ namespace TestApp.fire
             {
                 Thread.Sleep(30 * 1000);
                 CommandList.SendHeatBeat(this, getUserKey());
+            }
+        }
+
+        
+        public Task RefreshCurTask(bool bDelete = true)
+        {
+            KeyValuePair<string, string> pair;
+            List<KeyValuePair<string,string>> pairLst =  m_rcvpackagelst.FindAll(x => x.Key == "push@task");
+            if(pairLst ==null || pairLst.Count == 0)
+                return null;
+            if (pairLst.Count > 1) 
+            {
+                for (int i = 0; i < pairLst.Count; i++)
+                {
+                    lock (m_lock)
+                    {
+                        m_rcvpackagelst.Remove(pairLst[i]);
+                    }
+                }
+                pair = pairLst[pairLst.Count - 1];
+                
+            }
+            else
+                pair = pairLst[0];
+
+            if (default(KeyValuePair<string, string>).Equals(pair))
+            {
+                return null;
+            }
+            string jsonstr = TestApp.fire.Tool.PickupDataStr(pair.Value);
+            if (bDelete)
+                lock (m_lock)
+                {
+                    m_rcvpackagelst.Remove(pair);
+                }
+
+            if (string.IsNullOrEmpty(jsonstr))
+            {
+                ConsoleLog.Instance.writeInformationLog("提取json字符串失败，jsonstr=" + jsonstr);
+                return null;
+            }
+            else
+            {
+                webCurTask t =null;
+                try
+                {
+                    if (jsonstr.Contains("refreshTask"))
+                        jsonstr = jsonstr.Replace("refreshTask", "tasks");
+                    t = (webCurTask)JsonManager.JsonToObject(jsonstr, typeof(webCurTask));
+                }
+                catch (Exception ex1)
+                {
+                    ConsoleLog.Instance.writeSuccessLog("json转对象失败,str="+jsonstr);
+                }
+                if (t == null)
+                    ConsoleLog.Instance.writeInformationLog("json转对象失败,jsonstr="+jsonstr);
+
+                if (t.curTask!=null&& t.curTask.tasks != null && t.curTask.tasks.Count() > 0)
+                    return t.curTask.tasks[0];
+                else 
+                {
+                    ConsoleLog.Instance.writeInformationLog("获取当前任务失败,jsonstr="+jsonstr);
+                    return null;
+                }
             }
         }
     }

@@ -18,7 +18,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
+    <OutputPath>..\..\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -73,14 +73,17 @@
     <Compile Include="fire\Login.cs" />
     <Compile Include="fire\RoleCreate.cs" />
     <Compile Include="fire\RoleInfoStoreClient.cs" />
+    <Compile Include="fire\RoleName.cs" />
     <Compile Include="fire\RoleSel.cs" />
     <Compile Include="fire\ScriptEngine.cs" />
     <Compile Include="fire\sockets.cs" />
     <Compile Include="fire\TaskExecute.cs" />
+    <Compile Include="fire\TaskStep.cs" />
     <Compile Include="fire\Tool.cs" />
     <Compile Include="fire\webAction.cs" />
     <Compile Include="fire\webBuildingAction.cs" />
     <Compile Include="fire\webCurTask.cs" />
+    <Compile Include="fire\webIncense%40getIncenseInfo.cs" />
     <Compile Include="fire\webMainCityData.cs" />
     <Compile Include="fire\webOutput.cs" />
     <Compile Include="fire\webWoodInfo.cs" />

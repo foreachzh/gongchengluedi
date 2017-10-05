@@ -46,6 +46,14 @@ namespace TestApp.fire
             set { m_tasktxtPath = value; }
         }
 
+        private string m_strServerName;
+
+        public string StrServerName
+        {
+            get { return m_strServerName; }
+            set { m_strServerName = value; }
+        }
+
         /*
          http://s1344.gc.aoshitang.com/root/gateway.action?command=player@getPlayerList
          */
@@ -112,11 +120,11 @@ namespace TestApp.fire
                 webDetailRole detailinfo = (webDetailRole)JsonManager.JsonToObject(jsontest, typeof(webDetailRole));
                 m_roledetail = detailinfo;
 
-                jsontest = Regex.Match(outputstr, "curTask\":(?<value>.*?)\\]\\},").Groups["value"].Value + "]}";
+                jsontest = TestApp.fire.Tool.PickupDataStr(outputstr); ;
                 webCurTask taskInfo = (webCurTask)JsonManager.JsonToObject(jsontest, typeof(webCurTask));
-                if (taskInfo.tasks != null && taskInfo.tasks.Count() > 0)
+                if (taskInfo.curTask.tasks != null && taskInfo.curTask.tasks.Count() > 0)
                 {
-                    m_curTask = taskInfo.tasks[0];
+                    m_curTask = taskInfo.curTask.tasks[0];
                     // 把信息写入配置文件
                     TaskObj task = TaskObj.getCurTask(m_curTask);
                     // 把任务写入txt
@@ -173,6 +181,7 @@ namespace TestApp.fire
 
             m_serverAddr = lst[0];
             m_serverPort = Int32.Parse(lst[1]);
+            AppSetting.SetValue(m_strServerName, m_serverPort.ToString());
             return true;
         }
 

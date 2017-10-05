@@ -84,6 +84,10 @@ namespace TestApp.fire
             m_client.BeginConnect(remoteEP, new AsyncCallback(ConnectCallback), m_client);
 
             m_connectDone.WaitOne();//阻止线程，等待连接完成信号
+
+            Thread t = new Thread(CheckThread);
+            t.IsBackground = true;
+            t.Start();
         }
 
         ~AsynchronousClient()
@@ -204,8 +208,13 @@ namespace TestApp.fire
                 if (bytesRead > 0&&bytesRead< 4096 && state.tempbuff == null)
                 {
                     byte[] recvarr = state.buffer;
-                    DealData(recvarr);
-                    m_receiveDone.Set();
+                    byte[] temparr = new byte[bytesRead];
+                    Array.Copy(recvarr, 0, temparr, 0, bytesRead);
+                    lock (m_lock2)
+                    {
+                        m_barrLst.Add(temparr);
+                    }
+                    m_receiveDone.Set();//将事件状态设置为终止状态，允许一个或多个等待线程继续。
 
                     client.BeginReceive(state.buffer, 0, StateObject.BufferSize, 0, new AsyncCallback(ReceiveCallback), state);
                 }
@@ -239,17 +248,24 @@ namespace TestApp.fire
                     
                     // There might be more data, so store the data received so far.
                     // state.sb.Append(Encoding.ASCII.GetString(state.buffer, 0, bytesRead));
+
                     byte[] barr = new byte[state.tempbuff.Length + state.buffer.Length];
                     Array.Copy(state.tempbuff, 0, barr, 0, state.tempbuff.Length);
                     Array.Copy(state.buffer, 0, barr, state.tempbuff.Length, state.buffer.Length);
                     state.tempbuff = barr;
 
                     byte[] recvarr = state.tempbuff;
-                    DealData(recvarr);
+                    byte[] temparr = new byte[barr.Length-4096+bytesRead];
+                    Array.Copy(recvarr, 0, temparr, 0, temparr.Length);
+                    lock (m_lock2)
+                    {
+                        m_barrLst.Add(temparr);
+                    }
 
                     state.tempbuff = null;
 
                     m_receiveDone.Set();
+                    client.BeginReceive(state.buffer, 0, StateObject.BufferSize, 0, new AsyncCallback(ReceiveCallback), state);
                 }
             }
             catch (Exception e)
@@ -258,26 +274,139 @@ namespace TestApp.fire
             }
         }
 
+        private void CheckThread()
+        {
+            while (true)
+            {
+                Thread.Sleep(50);
+                if (m_barrLst.Count > 0)
+                {
+                    byte[] barr = m_barrLst[0];
+                    lock (m_lock2)
+                    {
+                        m_barrLst.RemoveAt(0);
+                    }
+                    DealData(barr);
+                }
+            }
+        }
+
+        private List<byte[]> m_barrLst = new List<byte[]>();
+        private static readonly object m_lock2 = new object();
+        protected static readonly object m_lock = new object();
         private void DealData(byte[] recvarr)
         {
-            int nPos = 4 + 32 + 4;//起始位置
-            int nTotalLen = (int)(recvarr[0] << 24) + (int)(recvarr[1] << 16) + (int)(recvarr[2] << 8) + (int)(recvarr[3]);
-            int nLen = nTotalLen - 32 - 4;
-            if (nLen < 10000 && nLen > 0)
+            List<KeyValuePair<string, string>> lst= getZipByteArr(recvarr);
+            lock (m_lock)
             {
-                byte[] outputarr = new byte[nLen];
-                Array.Copy(recvarr, nPos, outputarr, 0, nLen);
-                // 解码
-                byte[] arrDescrypt = ZlibCompress.DecompressBytes(outputarr);
-                string outputstr = System.Text.Encoding.UTF8.GetString(arrDescrypt);
-                // 获取指令
-                byte[] arrcipercode = new byte[32];
-                Array.Copy(recvarr, 4, arrcipercode, 0, 32);
-                string cipercodestr = System.Text.Encoding.UTF8.GetString(arrcipercode).Replace("\0", "");
-
-                m_rcvpackagelst.Add(new KeyValuePair<string, string>(cipercodestr, outputstr));
-                // 
+                m_rcvpackagelst.AddRange(lst);
             }
+            for (int i = 0; i < lst.Count; i++)
+            {
+                KeyValuePair<string, string> pair = lst[i];
+                ConsoleLog.Instance.writeInformationLog("报文解析:"+pair.Key+"="+pair.Value);
+            }
+            //int nPos = 4 + 32 + 4;//起始位置
+            //int nTotalLen = (int)(recvarr[0] << 24) + (int)(recvarr[1] << 16) + (int)(recvarr[2] << 8) + (int)(recvarr[3]);
+            //int nLen = nTotalLen - 32 - 4;
+            //if (nLen < 10000 && nLen > 0)
+            //{
+            //    byte[] outputarr = new byte[nLen];
+            //    Array.Copy(recvarr, nPos, outputarr, 0, nLen);
+            //    // 解码
+            //    byte[] arrDescrypt = ZlibCompress.DecompressBytes(outputarr);
+            //    string outputstr = System.Text.Encoding.UTF8.GetString(arrDescrypt);
+            //    // 获取指令
+            //    byte[] arrcipercode = new byte[32];
+            //    Array.Copy(recvarr, 4, arrcipercode, 0, 32);
+            //    string cipercodestr = System.Text.Encoding.UTF8.GetString(arrcipercode).Replace("\0", "");
+
+            //    m_rcvpackagelst.Add(new KeyValuePair<string, string>(cipercodestr, outputstr));
+            //    // 
+            //}
+        }
+
+        /// <summary>
+        /// 字节数组转16进制字符串
+        /// </summary>
+        /// <param name="bytes"></param>
+        /// <returns></returns>
+        private static string byteToHexStr(byte[] bytes)
+        {
+            string returnStr = "";
+            if (bytes != null)
+            {
+                for (int i = 0; i < bytes.Length; i++)
+                {
+                    returnStr += "0x"+bytes[i].ToString("X2") + ", ";
+                }
+            }
+            return returnStr;
+        }
+
+        public static List<KeyValuePair<string, string>> getZipByteArr(byte[] recvarr)
+        {
+            List<KeyValuePair<string, string>> lst = new List<KeyValuePair<string, string>>();
+            int index = 0;
+
+            try
+            {
+                while (index != -1)
+                {
+                    int nPos = 4 + 32 + 4 + index;//起始位置
+                    int nTotalLen = (int)(recvarr[index + 0] << 24) + (int)(recvarr[index + 1] << 16) + (int)(recvarr[index + 2] << 8) + (int)(recvarr[index + 3]);
+                    int nLen = nTotalLen - 32 - 4;
+                    if (nLen > recvarr.Length - index)
+                    {// 格式不正确的报文不解析
+                        byte[] temparr = new byte[recvarr.Length - index];
+                        Array.Copy(recvarr, index, temparr, 0, recvarr.Length - index);
+                        // 打印 出错字符串
+                        string str = byteToHexStr(temparr);
+
+                        System.Text.ASCIIEncoding encoder = new System.Text.ASCIIEncoding();
+                        //String StringMessage = encoder.GetString(recvarr, index, 40);
+
+                        ConsoleLog.Instance.writeInformationLog("无法解析的报文,字节数组=" + str+";iindex="+index);
+
+                        return lst;
+                    }
+                    else if (nLen < 0)
+                        break;
+
+                    byte[] outputarr = new byte[nLen];
+
+                    Array.Copy(recvarr, nPos, outputarr, 0, nLen);
+
+                    byte[] cmd = new byte[32];
+                    Array.Copy(recvarr, index + 4, cmd, 0, 32);
+                    string cmdstr = System.Text.Encoding.Default.GetString(cmd).TrimEnd('\0');
+
+                    // 将字节流解析为字符串
+                    byte[] arrDescrypt = ZlibCompress.DecompressBytes(outputarr);
+                    if (arrDescrypt != null)
+                    {
+                        string outputstr = System.Text.Encoding.UTF8.GetString(arrDescrypt);
+                        lst.Add(new KeyValuePair<string, string>(cmdstr, outputstr));
+                    }
+
+
+                    if (index + nTotalLen + 4 < recvarr.Length)
+                    {
+                        index += nTotalLen + 4;
+                    }
+                    else
+                        index = -1;
+                }
+            }
+            catch (Exception ex)
+            {
+                // 打印 出错字符串
+                string str = byteToHexStr(recvarr);
+
+                ConsoleLog.Instance.writeInformationLog("解析时发生异常,字节数组=" + str+";index="+index);
+                Console.WriteLine(ex.Message);
+            }
+            return lst;
         }
 
         /// <summary>
@@ -298,7 +427,10 @@ namespace TestApp.fire
         {
             try
             {
-                m_client.BeginSend(byteData, 0, byteData.Length, 0, new AsyncCallback(SendCallback), m_client);
+                if (m_client.Connected)
+                    m_client.BeginSend(byteData, 0, byteData.Length, 0, new AsyncCallback(SendCallback), m_client);
+                else
+                    ConsoleLog.Instance.writeInformationLog("已断开连接");
             }
             catch (Exception ex)
             {
@@ -337,6 +469,11 @@ namespace TestApp.fire
             paralist.Add(param1, param2);
             Command cmd = new Command(cmd1, paralist);
             Send(cmd.outputarr);
+        }
+
+        public bool bOpen()
+        {
+            return !m_client.Connected;
         }
         //public static int Main(String[] args)
         //{

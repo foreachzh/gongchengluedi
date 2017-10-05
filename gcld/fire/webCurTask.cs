@@ -6,67 +6,71 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Runtime.Serialization;
-
 namespace TestApp.fire
 {
-     [DataContract]
+
+    [DataContract]
+    public class Resource
+    {
+        [DataMember]
+        public int type { get; set; }
+        [DataMember]
+        public int value { get; set; }
+    }
+
+    [DataContract]
     public class Task
     {
-
         [DataMember]
-         public int type { get; set; }
-
+        public int type { get; set; }
         [DataMember]
         public int state { get; set; }
-
         [DataMember]
         public int taskId { get; set; }
-
         [DataMember]
         public int group { get; set; }
-
         [DataMember]
         public int index { get; set; }
-
         [DataMember]
         public string taskName { get; set; }
-
         [DataMember]
         public string introShort { get; set; }
-
         [DataMember]
         public string introLong { get; set; }
-
         [DataMember]
         public string processStr { get; set; }
-
         [DataMember]
         public bool requestCompleted { get; set; }
-
         [DataMember]
         public string markTrace { get; set; }
-
         [DataMember]
         public string iosMarktrace { get; set; }
-
-        [DataMember]
-        public string newTrace { get; set; }
-
         [DataMember]
         public int areaId { get; set; }
-
         [DataMember]
         public string pic { get; set; }
-
         [DataMember]
         public string plot { get; set; }
+        [DataMember]
+        public IList<Resource> resource { get; set; }
+        [DataMember]
+        public int chiefExp { get; set; }
     }
-     [DataContract]
-    public class webCurTask
-    {
 
+    [DataContract]
+    public class CurTask
+    {
         [DataMember]
         public IList<Task> tasks { get; set; }
+        [DataMember]
+        public string newGuidId { get; set; }
+    }
+
+    [DataContract]
+    public class webCurTask
+    {
+        [DataMember]
+        public CurTask curTask { get; set; }
     }
 
 }

@@ -10,7 +10,12 @@ namespace TestApp.fire
     {
         public static string PickupDataStr(string sourcestr)
         {
-            return Regex.Match(sourcestr, "data\":(?<value>.*?)}}}").Groups["value"].Value + "}";
+            // 先匹配四个括号，没有再匹配三个括号
+            string regexstr = Regex.Match(sourcestr, "data\":(?<value>.*?)}}}}").Groups["value"].Value;
+            if (!string.IsNullOrEmpty(regexstr))
+                return regexstr + "}}";
+            else
+                return Regex.Match(sourcestr, "data\":(?<value>.*?)}}}").Groups["value"].Value + "}";
         }
     }
 }

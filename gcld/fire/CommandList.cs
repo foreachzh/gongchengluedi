@@ -10,6 +10,8 @@ namespace TestApp.fire
     {
         public static string HeatBeat = "player@game";// 报文格式:...Wplayer@game.........................pkey=1503404221152_95b1143de12a8054ea752e263d62578b
         public static string HEART_BEAT_TEST= "player@ttest";
+        public static string HEART_BEAT_TEST2 = "player@ltest";
+
         /// <summary>
         /// 创角
         /// selfService("player@setPlayerForce","{\"forceId\":" + forceId + "}");
@@ -26,6 +28,7 @@ namespace TestApp.fire
         // ...$general@getGeneralSimpleInfo2.......
 
         public static string MC_UPGRADE_BUILDING = "building@upgradeBuilding";// 民居升级 ...0building@upgradeBuilding...........9buildingId=1
+        public static string xxx = "incense@getIncenseInfo";// 木材祭祀
 
         /*
         "curTask":{"tasks":[{"type":1,"state":1,"taskId":2,"group":0,"index":0,"taskName":"安居乐业1","introShort":"升级民居一<br>等级达到2级","introLong":"升级民居一等级达到2级","processStr":"","requestCompleted":false,"markTrace":"0","iosMarktrace":"0","newTrace":"2","areaId":1,"pic":"task3","plot":""}]},
@@ -84,11 +87,11 @@ namespace TestApp.fire
             client.Send(cmd2.outputarr);
             client.SendDone.WaitOne();
 
-            lst.Clear();
-            cmd2 = new Command(CommandList.HEART_BEAT_TEST, lst);
+            // lst.Clear();
+            // cmd2 = new Command(CommandList.HEART_BEAT_TEST2, lst);
 
-            client.Send(cmd2.outputarr);
-            client.SendDone.WaitOne();
+            // client.Send(cmd2.outputarr);
+            // client.SendDone.WaitOne();
         }
 
         private AsynchronousClient m_client;
@@ -119,7 +122,7 @@ namespace TestApp.fire
 
         public static void GetMainCityInfo(AsynchronousClient client)
         {
-            Command cmd = new Command("building@getMainCityInfo", null);
+            Command cmd = new Command("building@getMainCityInfo", "");
             client.Send(cmd.outputarr);
         }
 
