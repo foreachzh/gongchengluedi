@@ -80,8 +80,8 @@ namespace UnitTestProject1
             try
             {
                 Login target = new Login(); // TODO: 初始化为适当的值
-                target.Uname = "foreach";
-                target.Passwd = "8891129zh";
+                target.Uname = "用户名";
+                target.Passwd = "密码";
                 // ExcuteState expected = null; // TODO: 初始化为适当的值
                 ExcuteState actual;
                 actual = target.LoginGame();
