@@ -1,0 +1,148 @@
+
+
+      private function socketEventHandler(param1:Event) : void
+      {
+         Logger.addLog("连接socket事件：" + param1.type);
+         var _loc2_:SocketService = SocketService.getInstance();
+         _loc2_.removeEventListener(Event.CONNECT,this.socketEventHandler);
+         _loc2_.removeEventListener(IOErrorEvent.IO_ERROR,this.socketEventHandler);
+         _loc2_.removeEventListener(SecurityErrorEvent.SECURITY_ERROR,this.socketEventHandler);
+         if(param1.type != Event.CONNECT)
+         {
+            return;
+         }
+         HttpService.getInstance().isReconncet = false;
+         var _loc3_:Object = {"userkey":_loc2_.userKey};
+         Logger.addLog("发送至login_user接口：" + _loc2_.userKey);
+         _loc2_.send(RmList.LOGIN_KEY_LOGIN,_loc3_,this.reconnectResult);
+      }
+// 第一次与服务器通讯
+--首包
+00 00 00 4C 6C 6F 67 69 6E 5F 75 73 65 72 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 01 75 73 65 72 6B 65 79 3D 45 39 45 33 35 44 42 37 33 38 36 42 39 43 36 31 31 46 33 32 39 37 36 37 42 30 37 43 41 31 30 42 
+
+...Llogin_user..........................userkey=E9E35DB7386B9C611F329767B07CA10B
+
+      public static const LOGIN_KEY_LOGIN:RequestModel = new RequestModel("login_user");
+
+00 00 00 4C --数据长度
+--32位  command      login_user
+6C 6F 67 69 6E 5F 75 73 
+65 72 00 00 00 00 00 00 
+00 00 00 00 00 00 00 00 
+00 00 00 00 00 00 00 00 
+
+00 00 00 01 --包序
+75 73 65 72 6B 65 79 3D 45 39 45 33 35 44 42 37 33 38 36 42 39 43 36 31 31 46 33 32 39 37 36 37 42 30 37 43 41 31 30 42 
+
+// Socket发送
+      public function send(param1:RequestModel, param2:Object = null, param3:Function = null, param4:Boolean = true) : void
+      {
+         var _loc8_:* = null;
+         var _loc9_:* = null;
+         if(!connected)
+         {
+            return;
+         }
+         param1.token = ++_token;
+         if(this._rmList[param1.command] == null)
+         {
+            this._rmList[param1.command] = [];
+         }
+         this._rmList[param1.command].push({
+            "rm":param1,
+            "token":_token,
+            "callback":param3,
+            "alertError":param4,
+            "time":TimeUtil.getTime(),
+            "sendData":param2,
+            "mousePoint":new Point(Common.stage.mouseX,Common.stage.mouseY)
+         });
+         var _loc5_:ByteArray = new ByteArray();
+         _loc5_.writeUTFBytes(param1.command);
+         _loc5_.length = 32;
+         var _loc6_:ByteArray = new ByteArray();// 包序
+         _loc6_.writeInt(param1.token);
+         var _loc7_:ByteArray = new ByteArray();
+         if(param2 != null)
+         {
+            _loc8_ = "";
+            for(_loc9_ in param2)
+            {
+               if(_loc8_ != "")
+               {
+                  _loc8_ = _loc8_ + "&";
+               }
+               _loc8_ = _loc8_ + (_loc9_ + "=" + param2[_loc9_]);
+            }
+            _loc7_.writeUTFBytes(_loc8_);
+         }
+         if(param1.modal)
+         {
+            Common.ui.requesModal.startModal(param1);
+         }
+         writeInt(_loc5_.length + _loc6_.length + _loc7_.length);
+         writeBytes(_loc5_);
+         writeBytes(_loc6_);
+         writeBytes(_loc7_);
+         flush();
+      }
+
+      public function getResByUrl(param1:String, param2:Boolean = false) : *
+      {
+         var _loc3_:LoadItemModel = this._resList.getValueByKey(param1);
+         if(_loc3_ == null)
+         {
+            return null;
+         }
+         if(param2)
+         {
+            this._resList.removeKey(param1);
+         }
+         if(_loc3_.data is ByteArray)
+         {
+            (_loc3_.data as ByteArray).position = 0;
+         }
+         return _loc3_.data;
+      }
+
+var _loc1_:XML = Common.loader.getResByUrl("Config.xml",true);
+Common.serviceUrl = this.getConfig("socketServiceUrl");
+addCommand(FinishTaskEvent.EVENT_ID,FinishTaskCommand);
+public static const EVENT_ID:String = "task.FinishTaskEvent";
+/////////////////////////////////////////////////////////////////////////////////////////////////
+      public function addCommand(param1:String, param2:Class) : void
+      {
+         if(this._eventDispatcher)
+         {
+            this._commands[param1] = param2;
+            this._eventDispatcher.addEventListener(param1,this.executeCommand);
+         }
+      }
+
+      private function rewardBtn_ClickHandler(param1:MouseEvent) : void
+      {
+         GameUIData.getInstance().orderAppear = 0;
+         this._tData.newTask = true;
+         TaskData.getInstance().haveTask = false;
+         GameUIData.getInstance().order++;
+         Common.sound.play("effect","ui_get",false,false);
+         this.hide();
+         if(this._taskVO)
+         {
+            MvcEventDispatcher.dispatch(ModuleName.MODULE_GAME_UI,new FinishTaskEvent(this._taskVO.type,this._taskVO.group,this._taskVO.index));
+         }
+      }
+//
+BindUtil.bindSetter(this.taskInfoUpdate,this._tData,"taskInfoUpdate",true);
+
+      public static function bindSetter(param1:Function, param2:IEventDispatcher, param3:String, param4:Boolean = false) : ChangeWatcher
+      {
+         if(param4)
+         {
+            param1(param2[param3]);
+         }
+         var _loc5_:ChangeWatcher = new ChangeWatcher(param2,param3,param1);
+         return _loc5_;
+      }
+
+package game.module.taskcontent.model.TaskData send_movie70.swf
