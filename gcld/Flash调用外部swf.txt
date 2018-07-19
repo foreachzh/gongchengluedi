@@ -1,0 +1,62 @@
+import flash.display.Loader;
+import flash.utils.ByteArray;
+import flash.net.URLStream;
+import flash.system.LoaderContext;
+
+
+movieClip_2.addEventListener(MouseEvent.CLICK, testURLStream);
+
+function testURLStream(evt:MouseEvent):void        
+{         
+
+	[Embed("GameLoading.swf",mimeType="application/octet-stream")]
+	var c:Class;
+	var loader = new Loader();
+	var lc:LoaderContext = new LoaderContext(false,ApplicationDomain.currentDomain);
+	lc.allowCodeImport=true;
+	loader.loadBytes(new c(),lc);
+	loader.contentLoaderInfo.addEventListener(Event.COMPLETE,listcom);
+}      
+
+function listcom (evt:Event):void 
+{         
+
+	var key:* = new ByteArray();
+	var go = evt.currentTarget.applicationDomain.getDefinition("asio_net.encryptor.getKey") as Class;  //这行 不能调用非实例化函数
+	go = new go();
+	go.getKey(key);
+	trace(key);
+}  
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+import flash.display.Loader;
+import flash.utils.ByteArray;
+import flash.net.URLStream;
+import flash.system.LoaderContext;
+
+noname.addEventListener(MouseEvent.CLICK, fl_MouseClickHandler);
+
+function fl_MouseClickHandler(event:MouseEvent):void
+{
+	[Embed("D:/github/movie16.swf",mimeType="application/octet-stream")]
+	var c:Class;
+	var loader = new Loader();
+	var lc:LoaderContext = new LoaderContext(false,ApplicationDomain.currentDomain);
+	lc.allowCodeImport=true;
+	loader.loadBytes(new c(),lc);
+	loader.contentLoaderInfo.addEventListener(Event.COMPLETE,listcom);
+
+	trace("已单击鼠标");
+}
+
+function listcom (evt:Event):void 
+{
+	var key:* = new ByteArray();
+	var go = evt.currentTarget.applicationDomain.getDefinition("Alc") as Class;  //这行 不能调用非实例化函数
+	go = new go();
+	var encode = go.getEncode();
+	var decode = go.getDecode();
+	var mark1 = encode.Mask1;
+	trace("已执行完毕");
+}  
